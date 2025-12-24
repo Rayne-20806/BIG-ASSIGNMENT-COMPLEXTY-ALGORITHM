@@ -1,4 +1,3 @@
-
 package main
 
 import (
@@ -27,9 +26,9 @@ var (
 	dataRiwayat []DataBenchmark              // slice array dinamis untuk simpan data history
 )
 
-// =========================
+// ============
 // main program
-// =========================
+// ============
 func main() {
 	clearScreen()
 	fmt.Print("Inisialisasi Sistem RPG....")
@@ -84,9 +83,9 @@ func printMenu() {
 	fmt.Println("==========================================================")
 }
 
-// ==========================
+// ====================
 // Fitur Adventure Mode
-// ==========================
+// ====================
 func jalankanModeAdventure() {
 	clearScreen()
 	fmt.Println("--- 🛡️ ADVENTURE MODE: HERO LEVELING ---")
@@ -114,58 +113,74 @@ func jalankanModeAdventure() {
 }
 
 // ==========================
-// Fitur Benchmark Mode (digunakan analisis perbandingan waktu)
+// Fitur Benchmark Mode / run
 // ===========================
 func jalankanModeBenchmark() {
-	clearScreen()
+	for {
+		clearScreen()
+		fmt.Println("\n===================")
+		fmt.Println("   📊  BENCHMARK MODE")
+		fmt.Println("=====================")
+		fmt.Println("Ketik angka N untuk tes, atau ketik -1 untuk KELUAR.")
 
-	fmt.Println("\n========================================")
-	fmt.Println("   📊  BENCHMARK MODE: DATA COLLECTOR")
-	fmt.Println("========================================")
-	fmt.Println("⚠️  PERINGATAN: Input N > 35 semakin besar akan membuat rekursif lambat")
-
-	// Input batas uji
-	batasLevel := bacaInt("Masukkan Batas Uji level (min 5 max 50): ", 5, 50)
-
-	fmt.Println("\nSedang memproses benchmark... Mohon tunggu.")
-	fmt.Println("-------------------------------------------------------------")
-	fmt.Printf("%-10s | %-25s | %-25s\n", "LEVEL (N)", "ITERATIF (Seconds)", "REKURSIF (Seconds)")
-	fmt.Println("-------------------------------------------------------------")
-
-	// kosongkan riwayat
-	dataRiwayat = []DataBenchmark{}
-
-	// loop kelipatan
-	for n := 5; n <= batasLevel; n += 5 {
-		// uji iteratif
-		const repeat = 10000000
-		startIter := time.Now() // mulai stopwatch
-		for i := 0; i < repeat; i++ {
-			tribonacciIteratif(n) // jalankan fungsi
+		// Tampilkan Tabel Data yang sudah ada (biar kelihatan history-nya)
+		if len(dataRiwayat) > 0 {
+			fmt.Println("\n[ Riwayat Data Sesi Ini ]")
+			fmt.Println("-----------------------------------------------------------------------")
+			fmt.Printf("%-10s | %-25s | %-25s\n", "LEVEL (N)", "ITERATIF (Seconds)", "REKURSIF (Seconds)")
+			fmt.Println("-----------------------------------------------------------------------")
+			for _, data := range dataRiwayat {
+				fmt.Printf("%-10d | %-25.9f | %-25.9f\n", data.Level, data.DurasiIteratif, data.DurasiRekursif)
+			}
+			fmt.Println("-----------------------------------------------------------------------")
 		}
-		waktuIter := time.Since(startIter).Seconds() / float64(repeat) //stop
 
-		// uji rekursif
+		fmt.Println("\n⚠️  Info: N > 40 Rekursif akan sangat lama (bisa > 30 detik).")
+
+		// Baca input
+		n := bacaInt(">> Masukkan Target N (-1 to Back): ", -1, 100)
+
+		// Cek Logika input
+		if n == -1 {
+			fmt.Println("Kembali ke menu utama...")
+			time.Sleep(500 * time.Millisecond)
+			return // Keluar dari benchmark
+		}
+		if n < 0 {
+			fmt.Println("Level tidak boleh negatif selain -1.")
+			time.Sleep(1 * time.Second)
+			continue
+		}
+
+		fmt.Printf("\nSedang memproses level %d... ", n)
+
+		//PROSES UJI ITERATIF
+		const repeat = 10000000
+		startIter := time.Now()
+		for i := 0; i < repeat; i++ {
+			tribonacciIteratif(n)
+		}
+		waktuIter := time.Since(startIter).Seconds() / float64(repeat)
+
+		// PROSES UJI REKURSIF
+		if n > 35 {
+			fmt.Print("\nRekursif sedang bekerja keras...")
+		}
 		startRec := time.Now()
 		_ = tribonacciRekursif(n)
 		waktuRec := time.Since(startRec).Seconds()
 
-		//tampilkan
-		fmt.Printf("%-10d | %-25.9f | %-25.9f\n", n, waktuIter, waktuRec)
-
-		// simpan data ke memori untuk menu export
+		// Simpan data
 		dataBaru := DataBenchmark{
 			Level:          n,
 			DurasiIteratif: waktuIter,
 			DurasiRekursif: waktuRec,
 		}
 		dataRiwayat = append(dataRiwayat, dataBaru)
+
+		fmt.Println("✅ Selesai!")
+		time.Sleep(500 * time.Millisecond)
 	}
-
-	fmt.Println("Benchmark Selesai! Data tersimpan sementara di memori.")
-	fmt.Println(" Coba Pilih Menu 4 untuk menyimpan data ini ke file Excel (CSV).")
-	waitForEnter()
-
 }
 
 // ==========================
@@ -201,7 +216,7 @@ func jalankanExportExcel() {
 
 	// validasi apakah data ada dimemori
 	if len(dataRiwayat) == 0 {
-		fmt.Println("⚠️  Data kosong! Silakan jalankan 'Benchmark Mode' (Menu 2) dulu.")
+		fmt.Println("Data kosong! Silakan jalankan 'Benchmark Mode' (Menu 2) dulu.")
 		waitForEnter()
 		return
 	}
@@ -231,8 +246,6 @@ func jalankanExportExcel() {
 // ==========================
 // ALGORITGN INTI TRIBONACCI
 // ==========================
-
-// Ini fungsi iteratif
 func tribonacciIteratif(n int) int {
 	if n == 0 {
 		return 0
@@ -249,7 +262,6 @@ func tribonacciIteratif(n int) int {
 	return c
 }
 
-// Ini fungsi rekursif
 func tribonacciRekursif(n int) int {
 	// Base Case (Kondisi Berhenti)
 	if n == 0 {
